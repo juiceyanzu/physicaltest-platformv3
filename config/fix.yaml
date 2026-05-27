@@ -1,0 +1,1 @@
+Insufficient alert data to propose a safe fix. Root cause and faulty code cannot be identified without error messages, logs, or deployment history. Recommendation: Collect full alert payload including error signature, timestamp window, and related service logs before proceeding.
