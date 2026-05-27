@@ -1,0 +1,155 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "体测平台"
+      }
+    },
+    {
+      "path": "pages/student/login",
+      "style": {
+        "navigationBarTitleText": "学生登录"
+      }
+    },
+    {
+      "path": "pages/student/home",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/student/notices",
+      "style": {
+        "navigationBarTitleText": "公告通知"
+      }
+    },
+    {
+      "path": "pages/student/notice-detail",
+      "style": {
+        "navigationBarTitleText": "公告详情"
+      }
+    },
+    {
+      "path": "pages/student/appointments",
+      "style": {
+        "navigationBarTitleText": "预约体测"
+      }
+    },
+    {
+      "path": "pages/student/my-appointments",
+      "style": {
+        "navigationBarTitleText": "我的预约"
+      }
+    },
+    {
+      "path": "pages/student/scores",
+      "style": {
+        "navigationBarTitleText": "我的成绩"
+      }
+    },
+    {
+      "path": "pages/student/profile",
+      "style": {
+        "navigationBarTitleText": "个人中心"
+      }
+    },
+    {
+      "path": "pages/teacher/login",
+      "style": {
+        "navigationBarTitleText": "教师登录"
+      }
+    },
+    {
+      "path": "pages/teacher/dashboard",
+      "style": {
+        "navigationBarTitleText": "工作台"
+      }
+    },
+    {
+      "path": "pages/teacher/appointments",
+      "style": {
+        "navigationBarTitleText": "预约管理"
+      }
+    },
+    {
+      "path": "pages/teacher/score-entry",
+      "style": {
+        "navigationBarTitleText": "成绩录入"
+      }
+    },
+    {
+      "path": "pages/admin/login",
+      "style": {
+        "navigationBarTitleText": "管理员登录"
+      }
+    },
+    {
+      "path": "pages/admin/dashboard",
+      "style": {
+        "navigationBarTitleText": "管理后台"
+      }
+    },
+    {
+      "path": "pages/admin/users",
+      "style": {
+        "navigationBarTitleText": "用户管理"
+      }
+    },
+    {
+      "path": "pages/admin/projects",
+      "style": {
+        "navigationBarTitleText": "项目管理"
+      }
+    },
+    {
+      "path": "pages/admin/batches",
+      "style": {
+        "navigationBarTitleText": "批次管理"
+      }
+    },
+    {
+      "path": "pages/admin/notices",
+      "style": {
+        "navigationBarTitleText": "公告管理"
+      }
+    },
+    {
+      "path": "pages/admin/banners",
+      "style": {
+        "navigationBarTitleText": "轮播图管理"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "体测平台",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#3cc51f",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/student/home",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/student/appointments",
+        "text": "预约"
+      },
+      {
+        "pagePath": "pages/student/scores",
+        "text": "成绩"
+      },
+      {
+        "pagePath": "pages/student/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "uniIdRouter": {}
+}

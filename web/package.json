@@ -1,0 +1,22 @@
+{
+  "name": "physicaltest-web",
+  "version": "1.0.0",
+  "description": "体测平台教师端和管理员端网页应用",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "ant-design-vue": "^4.1.2",
+    "axios": "^1.6.8",
+    "vue-router": "^4.3.0",
+    "pinia": "^2.1.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.6"
+  }
+}

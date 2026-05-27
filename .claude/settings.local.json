@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(netstat -ano)",
+      "Bash(tasklist *)",
+      "mcp__ide__getDiagnostics",
+      "Bash(curl -s http://localhost:3000/api/users/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(curl -s http://localhost:3000/api/users/students -H \"Authorization: Bearer $\\(curl -s http://localhost:3000/api/users/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin123\"}')",
+      "Bash(python3 -c 'import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d[\"data\"][:1], indent=2, ensure_ascii=False\\)\\)')",
+      "Bash(curl *)",
+      "Bash(taskkill *)",
+      "Bash(node -e ' *)",
+      "Bash(python test_teacher.py)",
+      "Bash(pip install *)",
+      "Bash(python -m playwright install chromium)",
+      "Bash(python test_detail.py)",
+      "Bash(python -c \"import sys,json; print\\(json.loads\\(sys.stdin.read\\(\\)\\)['data']['token']\\)\")",
+      "Bash(python -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\(json.dumps\\(data['data'][:3], indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(python -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\(json.dumps\\(data['data'][:2], indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(python -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); b=data['data'][0]; print\\([k for k in b.keys\\(\\)]\\)\")",
+      "Bash(python -c \"import sys,json; data=json.loads\\(sys.stdin.read\\(\\)\\); print\\(json.dumps\\(data['data'][:1], indent=2, ensure_ascii=False\\)\\)\")"
+    ]
+  }
+}
