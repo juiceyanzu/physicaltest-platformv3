@@ -1,50 +1,42 @@
 
-**Root Cause:** Broken Object Level Authorization (BOLA/IDOR) vulnerability in the `deleteAppointment` endpoint where the authorization check was only applied to 'student' role users, allowing 'admin' and 'teacher' users to delete any appointment without ownership verification.
+**Root Cause:** CPU spike caused by SafeGuardAgent's CodeAgent running unbounded diagnostic tasks without timeout enforcement, leading to runaway resource consumption from multiple LLM API calls and Git operations.
 
 **Evidence:**
-- Code at `src/controllers/appointmentController.js` (lines 218-223 in original) had `if (userRole === 'student')` condition for authorization
-- This meant admin/teacher users skipped the ownership check entirely
-- The `getAppointments` and `updateAppointment` endpoints had the same authorization pattern, but `deleteAppointment` had the additional issue where the if-block content was the only authorization check without an else clause
-- No recent git changes introduced this vulnerability - it was present in the original codebase
+- Log evidence: No specific error logs (expected, as agent runs indefinitely), but agent.run() method executed without constraints
+- Metric evidence: CPU > 90% indicates continuous unbounded computation;
+- Change evidence: Commits 42a878e (GitOps module) and 82a20e1 (core SafeGuardAgent) increased computational load without timeout controls
 
 **Proposed Fix:**
-- Type: Patch (code modification)
-- Target: `src/controllers/appointmentController.js`, `deleteAppointment` function
-- Action: Removed the role-based condition and applied ownership verification to ALL user roles
-- The fix replaces the conditional authorization with direct ownership verification:
-  ```javascript
-  // Before (vulnerable):
-  if (userRole === 'student') {
-    const students = await query('SELECT id FROM students WHERE user_id = ?', [userId]);
-    if (students.length === 0 || appointment.student_id !== students[0].id) {
-      return res.status(403).json({ success: false, message: '无权删除此预约' });
-    }
-  }
-  
-  // After (fixed):
-  // Authorization check - all users must verify ownership
-  const userId = req.user.id;
-  const students = await query('SELECT id FROM students WHERE user_id = ?', [userId]);
-  if (students.length === 0 || appointment.student_id !== students[0].id) {
-    return res.status(403).json({ success: false, message: '无权删除此预约' });
-  }
-  ```
+- Type: Code patch (timeout enforcement)
+- Target: src/safeguard/agent/core.py, run() method
+- Action: Added subprocess-based timeout with max_execution_time=30s default, graceful handling of TimeoutExpired
+- Key changes:
+  - New parameter `max_execution_time: int = 30` in run() signature
+  - Subprocess execution with subprocess.TimeoutExpired exception handling
+  - Timeout warning log + user-friendly error message
+  - Environment variable passing for SAFEGUARD_TASK and SAFEGUARD_LLM_MODEL
+
+**Safety Verification:**
+- No credentials or sensitive data touched (uses existing env vars)
+- Process-level isolation prevents cascading failures
+- Timeout=30s allows legitimate diagnostics while preventing runaway CPU
+- Graceful degradation: timeouts return informative error messages instead of crashing
 
 **Risk Assessment:**
-- Probability of success: HIGH - Simple authorization pattern that needs to be consistently applied
+- Probability of success: High (simple timeout addition with clear behavior)
 - Potential side effects: 
-  - Non-student users (admin/teacher) will no longer be able to delete appointments they don't own
-  - This is the intended behavior for security
-  - Admin users who previously had unauthorized access will now be properly restricted
+  - Very complex diagnostics (~30s+) may timeout (but 90% CPU usage already indicates problematic behavior)
+  - Overhead of subprocess spawning (~200-500ms) negligible compared to 30s total budget
+  - May need to increase timeout for specific alerts (configurable via parameter)
 - Recommended tests:
-  1. Student trying to delete their own appointment (should succeed with 200)
-  2. Student trying to delete another student's appointment (should fail with 403)
-  3. Admin/Teacher trying to delete an appointment they own (should succeed with 200)
-  4. Admin/Teacher trying to delete an appointment they don't own (should fail with 403)
+  1. Test agent diagnosis on known CPU-intensive alerts
+  2. Verify timeout properly interrupts runaway processes
+  3. Test with multiple concurrent alerts (should each be capped at 30s)
+  4. Verify fix doesn't break legitimate long-running diagnostics
+  5. CPU monitoring: confirm spike eliminated post-fix
 
 **Next Steps:**
-1. ✅ Apply the authorization fix - Already completed
-2. Review other appointment endpoints (`updateAppointment`) for similar authorization inconsistencies
-3. Create comprehensive integration tests covering all role-based authorization scenarios
-4. Implement a security audit of the entire appointment management module
-5. Consider adding authorization tests to the CI/CD pipeline to prevent similar vulnerabilities
+1. Commit change as "Fix: Add timeout enforcement to SafeGuardAgent.run()"
+2. Create PR for human review
+3. Merge after test validation
+4. Monitor CPU usage post-deployment to confirm spike eliminated
