@@ -1,50 +1,32 @@
 
-**Root Cause:** Broken Object Level Authorization (BOLA/IDOR) vulnerability in the `deleteAppointment` endpoint where the authorization check was only applied to 'student' role users, allowing 'admin' and 'teacher' users to delete any appointment without ownership verification.
+**Root Cause:** Connection pool settings were incorrectly reduced in configuration, causing pool exhaustion and high P99 latency (>2s) when normal traffic volumes exceeded the capacity.
 
 **Evidence:**
-- Code at `src/controllers/appointmentController.js` (lines 218-223 in original) had `if (userRole === 'student')` condition for authorization
-- This meant admin/teacher users skipped the ownership check entirely
-- The `getAppointments` and `updateAppointment` endpoints had the same authorization pattern, but `deleteAppointment` had the additional issue where the if-block content was the only authorization check without an else clause
-- No recent git changes introduced this vulnerability - it was present in the original codebase
+- Log evidence: Pattern of connection timeouts in backend services (auth-service, database, user-service)
+- Metric evidence: High connection pool saturation (>95%) and queue depth spikes around alert time
+- Change evidence: Configuration reduced from pool size 100 to 50, timeouts from 5000ms to 2000ms, and backend pools halved
 
 **Proposed Fix:**
-- Type: Patch (code modification)
-- Target: `src/controllers/appointmentController.js`, `deleteAppointment` function
-- Action: Removed the role-based condition and applied ownership verification to ALL user roles
-- The fix replaces the conditional authorization with direct ownership verification:
-  ```javascript
-  // Before (vulnerable):
-  if (userRole === 'student') {
-    const students = await query('SELECT id FROM students WHERE user_id = ?', [userId]);
-    if (students.length === 0 || appointment.student_id !== students[0].id) {
-      return res.status(403).json({ success: false, message: '无权删除此预约' });
-    }
-  }
-  
-  // After (fixed):
-  // Authorization check - all users must verify ownership
-  const userId = req.user.id;
-  const students = await query('SELECT id FROM students WHERE user_id = ?', [userId]);
-  if (students.length === 0 || appointment.student_id !== students[0].id) {
-    return res.status(403).json({ success: false, message: '无权删除此预约' });
-  }
-  ```
+- Type: Configuration patch (no code rollback required)
+- Target: api-gateway.yaml configuration file
+- Action: Restore connection pool settings to safe values with added circuit breaker resilience
+
+**Fix Changes:**
+- Connection pool size: 50 to 100 (restore capacity)
+- Max wait time: 2000ms to 5000ms (prevent premature failures)
+- Auth-service pool: 10 to 20 (restore backend capacity)
+- User-service pool: 10 to 20 (restore backend capacity)
+- Database pool: 15 to 30 (restore database capacity)
+- Added circuit breaker patterns to prevent cascade failures
 
 **Risk Assessment:**
-- Probability of success: HIGH - Simple authorization pattern that needs to be consistently applied
-- Potential side effects: 
-  - Non-student users (admin/teacher) will no longer be able to delete appointments they don't own
-  - This is the intended behavior for security
-  - Admin users who previously had unauthorized access will now be properly restricted
-- Recommended tests:
-  1. Student trying to delete their own appointment (should succeed with 200)
-  2. Student trying to delete another student's appointment (should fail with 403)
-  3. Admin/Teacher trying to delete an appointment they own (should succeed with 200)
-  4. Admin/Teacher trying to delete an appointment they don't own (should fail with 403)
+- Probability of success: High (configuration changes are well-understood, reversible)
+- Potential side effects: Increased resource utilization on downstream services during traffic spikes
+- Recommended tests: Load testing with expected traffic patterns, connection pool health metrics verification, circuit breaker failover testing
 
 **Next Steps:**
-1. ✅ Apply the authorization fix - Already completed
-2. Review other appointment endpoints (`updateAppointment`) for similar authorization inconsistencies
-3. Create comprehensive integration tests covering all role-based authorization scenarios
-4. Implement a security audit of the entire appointment management module
-5. Consider adding authorization tests to the CI/CD pipeline to prevent similar vulnerabilities
+1. Create PR with the restored configuration
+2. Deploy to staging environment for load testing
+3. Monitor connection pool metrics (active/idle/max connections, queue depth)
+4. Coordinate with backend services teams to investigate root cause
+5. Implement circuit breaker configuration optimally based on environment constraints
